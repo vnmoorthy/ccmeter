@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="560" viewBox="0 0 940 560" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#15151a"/>
+      <stop offset="1" stop-color="#0a0a0c"/>
+    </linearGradient>
+    <filter id="soft">
+      <feGaussianBlur stdDeviation="0.4"/>
+    </filter>
+  </defs>
+  <rect width="940" height="560" rx="14" fill="url(#bg)"/>
+  <!-- titlebar -->
+  <g transform="translate(0,0)">
+    <rect width="940" height="36" rx="14" fill="#1a1a20"/>
+    <rect y="22" width="940" height="14" fill="#1a1a20"/>
+    <circle cx="22" cy="18" r="6" fill="#ff5f57"/>
+    <circle cx="42" cy="18" r="6" fill="#febc2e"/>
+    <circle cx="62" cy="18" r="6" fill="#28c840"/>
+    <text x="470" y="23" fill="#7a7d83" font-size="12" text-anchor="middle">moorthy@laptop — ccmeter</text>
+  </g>
+  <!-- prompt -->
+  <text x="24" y="74" fill="#7eff8e" font-size="13">$</text>
+  <text x="40" y="74" fill="#fafafa" font-size="13">npx ccmeter</text>
+
+  <!-- header -->
+  <text x="24" y="110" fill="#fafafa" font-weight="700" font-size="14">ccmeter — last 30 days</text>
+  <line x1="24" y1="120" x2="916" y2="120" stroke="#2a2a32" stroke-width="1"/>
+
+  <!-- KPIs -->
+  <g font-size="13">
+    <text x="24" y="146" fill="#7a7d83">Total spend</text>
+    <text x="200" y="146" fill="#fafafa" font-weight="700">$284.10</text>
+    <text x="280" y="146" fill="#ff8a4d">(↑ +43% vs prior period)</text>
+
+    <text x="24" y="170" fill="#7a7d83">Daily average</text>
+    <text x="200" y="170" fill="#fafafa">$9.47</text>
+    <text x="280" y="170" fill="#7a7d83">≈ $284.10/month at this rate</text>
+
+    <text x="24" y="194" fill="#7a7d83">Sessions</text>
+    <text x="200" y="194" fill="#fafafa">127</text>
+
+    <text x="24" y="218" fill="#7a7d83">Cache hit rate</text>
+    <text x="200" y="218" fill="#ff8a4d" font-weight="700">47.3%</text>
+
+    <text x="24" y="242" fill="#7a7d83">Cache busts</text>
+    <text x="200" y="242" fill="#fafafa">89</text>
+    <text x="280" y="242" fill="#ff8a4d">wasted $24.18</text>
+  </g>
+
+  <!-- sparkline -->
+  <text x="24" y="284" fill="#7a7d83" font-size="13">Daily spend</text>
+  <text x="130" y="284" fill="#eaff00" font-size="14" letter-spacing="1.4">▁▂▂▃▅▇█▆▄▅█▇▆▄▃▄▆█▇▅▃▂▃▅▆█▇▅▄▃</text>
+
+  <!-- chart -->
+  <g transform="translate(24,310)">
+    <rect width="880" height="120" fill="#0e0e12" rx="6"/>
+    <!-- bars -->
+    <g fill="#eaff00">
+      <rect x="14"  y="92"  width="22" height="20"/>
+      <rect x="44"  y="78"  width="22" height="34"/>
+      <rect x="74"  y="80"  width="22" height="32"/>
+      <rect x="104" y="64"  width="22" height="48"/>
+      <rect x="134" y="48"  width="22" height="64"/>
+      <rect x="164" y="22"  width="22" height="90"/>
+      <rect x="194" y="12"  width="22" height="100"/>
+      <rect x="224" y="38"  width="22" height="74"/>
+      <rect x="254" y="54"  width="22" height="58"/>
+      <rect x="284" y="44"  width="22" height="68"/>
+      <rect x="314" y="14"  width="22" height="98"/>
+      <rect x="344" y="26"  width="22" height="86"/>
+      <rect x="374" y="36"  width="22" height="76"/>
+      <rect x="404" y="50"  width="22" height="62"/>
+      <rect x="434" y="64"  width="22" height="48"/>
+      <rect x="464" y="50"  width="22" height="62"/>
+      <rect x="494" y="34"  width="22" height="78"/>
+      <rect x="524" y="14"  width="22" height="98"/>
+      <rect x="554" y="22"  width="22" height="90"/>
+      <rect x="584" y="42"  width="22" height="70"/>
+      <rect x="614" y="64"  width="22" height="48"/>
+      <rect x="644" y="78"  width="22" height="34"/>
+      <rect x="674" y="62"  width="22" height="50"/>
+      <rect x="704" y="46"  width="22" height="66"/>
+      <rect x="734" y="32"  width="22" height="80"/>
+      <rect x="764" y="14"  width="22" height="98"/>
+      <rect x="794" y="32"  width="22" height="80"/>
+      <rect x="824" y="56"  width="22" height="56"/>
+    </g>
+    <!-- April 2 marker -->
+    <line x1="194" y1="0" x2="194" y2="120" stroke="#ff5f57" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+    <text x="200" y="14" fill="#ff5f57" font-size="11">↓ Apr 2 cache TTL change</text>
+  </g>
+
+  <!-- suggestions -->
+  <g font-size="13">
+    <text x="24" y="458" fill="#fafafa" font-weight="700">Suggestions:</text>
+    <circle cx="34" cy="478" r="3" fill="#ff8a4d"/>
+    <text x="46" y="482" fill="#fafafa">Idle sessions are busting your cache 41× per week</text>
+    <text x="514" y="482" fill="#7eff8e">save $43/mo</text>
+    <circle cx="34" cy="500" r="3" fill="#ff8a4d"/>
+    <text x="46" y="504" fill="#fafafa">6 long sessions (&gt;90 min) bled cache value</text>
+    <text x="514" y="504" fill="#7eff8e">save $18/mo</text>
+    <text x="46" y="526" fill="#7a7d83">+ 4 more — run </text>
+    <text x="170" y="526" fill="#eaff00">ccmeter recommend</text>
+  </g>
+
+  <!-- footer -->
+  <text x="916" y="546" text-anchor="end" fill="#7a7d83" font-size="11">local · no telemetry · github.com/vnmoorthy/ccmeter</text>
+</svg>

@@ -1,0 +1,30 @@
+name: Recommendation request
+description: Suggest a new cost pattern ccmeter should detect
+title: "rec: "
+labels: [enhancement, recommendation]
+body:
+  - type: textarea
+    id: pattern
+    attributes:
+      label: Pattern
+      description: What pattern in the data signals waste?
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: Fix
+      description: What should the user do about it?
+    validations:
+      required: true
+  - type: textarea
+    id: estimate
+    attributes:
+      label: Savings estimate
+      description: How would you compute estimated monthly savings honestly?
+  - type: textarea
+    id: example
+    attributes:
+      label: Example data (redacted)
+      description: A few rows of `ccmeter export --format json --anonymize`.
+      render: json

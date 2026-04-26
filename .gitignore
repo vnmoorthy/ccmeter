@@ -1,0 +1,30 @@
+# Build artifacts
+node_modules/
+dist/
+*.tgz
+coverage/
+.cache/
+.vite/
+
+# tsup and vitest write transient bundled / timestamped copies of their
+# configs next to the source config; on some filesystems we can't always
+# delete them cleanly afterwards. Don't ship them.
+tsup.config.bundled_*.mjs
+vitest.config.ts.timestamp-*.mjs
+*.config.ts.timestamp-*.mjs
+*.config.bundled_*.mjs
+
+# Throwaway frame extractions used while iterating on the README cast.gif
+docs/_frame_*.png
+docs/_frame_*.jpg
+
+# OS / editor noise
+*.log
+.DS_Store
+.env
+.env.local
+.idea/
+.vscode/
+
+# Claude Code working files (in case they ever land here)
+.claude/
