@@ -86,9 +86,9 @@
       <rect x="794" y="32"  width="22" height="80"/>
       <rect x="824" y="56"  width="22" height="56"/>
     </g>
-    <!-- April 2 marker -->
+    <!-- early-March-2026 cache TTL rollout marker -->
     <line x1="194" y1="0" x2="194" y2="120" stroke="#ff5f57" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
-    <text x="200" y="14" fill="#ff5f57" font-size="11">↓ Apr 2 cache TTL change</text>
+    <text x="200" y="14" fill="#ff5f57" font-size="11">↓ Mar 2026 cache TTL rollout</text>
   </g>
 
   <!-- suggestions -->

@@ -54,10 +54,10 @@ npm test --silent >/dev/null
 npm run build:cli >/dev/null
 green "      ✓ green"
 
-cyan "3/6  Verify version is v0.2.0"
+cyan "3/6  Read version from package.json"
 VER=$(node -e "console.log(require('./package.json').version)")
-if [[ "$VER" != "0.2.0" ]]; then
-  red "      ✗ package.json says $VER — bump to 0.2.0 first"
+if [[ -z "$VER" ]]; then
+  red "      ✗ couldn't read version from package.json"
   exit 1
 fi
 green "      ✓ $VER"
@@ -72,27 +72,23 @@ git add .
 if git diff --cached --quiet; then
   yellow "      (nothing to commit — repo already has v0.2.0)"
 else
-  git commit -m "Initial release: ccmeter v0.2.0
+  git commit -m "Release ccmeter v$VER
 
-Local-first spend & cache-efficiency dashboard for Claude Code.
-Reads ~/.claude/projects, parses session JSONLs, surfaces 13
-recommendation rules ranked by estimated monthly savings, ships
-a localhost dashboard. Zero network, zero credentials, zero
-telemetry." >/dev/null
+See CHANGELOG.md for details." >/dev/null
   green "      ✓ committed"
 fi
 
-if git rev-parse v0.2.0 >/dev/null 2>&1; then
-  yellow "      (tag v0.2.0 already exists)"
+if git rev-parse "v$VER" >/dev/null 2>&1; then
+  yellow "      (tag v$VER already exists)"
 else
-  git tag -a v0.2.0 -m "ccmeter v0.2.0 — see CHANGELOG.md"
-  green "      ✓ tagged v0.2.0"
+  git tag -a "v$VER" -m "ccmeter v$VER — see CHANGELOG.md"
+  green "      ✓ tagged v$VER"
 fi
 
-cyan "5/6  Build the v0.2.0 tarball"
-rm -f ccmeter-0.2.0.tgz
+cyan "5/6  Build the v$VER tarball"
+rm -f "ccmeter-$VER.tgz"
 npm pack --silent >/dev/null
-green "      ✓ ccmeter-0.2.0.tgz"
+green "      ✓ ccmeter-$VER.tgz"
 
 cyan "6/6  What's next (these need YOUR auth)"
 cat <<'EOF'

@@ -132,6 +132,18 @@ function render(recent: Tick[], totalToday: number, _bustsToday: number, dir: st
   lines.push(
     `  ${bold("today")}     ${fmtUSD(totalToday)}    ${dim("(updates as Claude Code writes)")}`,
   );
+
+  // ──── AI Coach: rules-based real-time warnings ────
+  // Cheap, deterministic checks against the recent-turn buffer. No model
+  // calls. Each rule fires at most once per render and is suppressed if
+  // it's already obvious from context.
+  const warnings = coachWarnings(recent);
+  if (warnings.length > 0) {
+    lines.push("");
+    lines.push(yellow("  ⚠ coach"));
+    for (const w of warnings) lines.push(`    ${yellow("→")} ${w}`);
+  }
+
   lines.push("");
   lines.push(dim("  recent turns"));
   if (recent.length === 0) {
@@ -150,6 +162,61 @@ function render(recent: Tick[], totalToday: number, _bustsToday: number, dir: st
   lines.push("");
   lines.push(dim("  Ctrl-C to exit"));
   process.stdout.write(lines.join("\n"));
+}
+
+/** Cheap, opinionated, deterministic rules. The intent is "warn before the
+ * user wastes the next $1." Each rule returns 0 or 1 string. Adding a rule
+ * is a 4-line PR; keep them obvious. */
+function coachWarnings(recent: Tick[]): string[] {
+  const out: string[] = [];
+  if (recent.length === 0) return out;
+  const now = Date.now();
+  const last = recent[recent.length - 1]!;
+
+  // 1. Idle-bust imminent: last turn was 4–4.9 minutes ago and we used cache.
+  const idleSec = (now - last.ts) / 1000;
+  if (idleSec >= 240 && idleSec < 300) {
+    out.push(
+      `idle ${Math.floor(idleSec)}s — 5m cache TTL is about to expire. Type something or your next turn re-pays full input.`,
+    );
+  }
+
+  // 2. Three pricey turns in a row (>$0.30 each): probably looping/agentic.
+  const last3 = recent.slice(-3);
+  if (last3.length === 3 && last3.every((t) => t.cost >= 0.3)) {
+    const sum = last3.reduce((a, t) => a + t.cost, 0);
+    out.push(
+      `3 consecutive expensive turns (${fmtUSD(sum)} in ${humanGap(last3[0]!.ts, last3[2]!.ts)}). Consider /compact or splitting the task.`,
+    );
+  }
+
+  // 3. Same tool fired 5+ times in last 10 turns: probably stuck in a loop.
+  const last10 = recent.slice(-10);
+  const counts = new Map<string, number>();
+  for (const t of last10) for (const n of t.toolNames) counts.set(n, (counts.get(n) ?? 0) + 1);
+  for (const [name, n] of counts) {
+    if (n >= 5) {
+      out.push(`${name} fired ${n}× in the last ${last10.length} turns — possibly stuck in a tool loop.`);
+      break;
+    }
+  }
+
+  // 4. High-cost minute: last 60s burned >$1.
+  const since60 = recent.filter((t) => now - t.ts < 60_000);
+  const costMin = since60.reduce((a, t) => a + t.cost, 0);
+  if (costMin >= 1.0) {
+    out.push(
+      `${fmtUSD(costMin)} in the last minute — ${(costMin * 60).toFixed(2)}/hr at this rate. Consider switching to a smaller model for this stretch.`,
+    );
+  }
+
+  return out;
+}
+
+function humanGap(t0: number, t1: number): string {
+  const s = Math.max(1, Math.round((t1 - t0) / 1000));
+  if (s < 60) return `${s}s`;
+  return `${Math.round(s / 60)}m`;
 }
 
 function short(model: string): string {

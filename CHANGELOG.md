@@ -4,6 +4,76 @@ All notable changes to ccmeter will be documented here. Format: [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-26
+
+Seven new features that knock items off the README roadmap. All in-tree;
+no new infrastructure required.
+
+### Added
+
+- **`ccmeter prompts`** — per-prompt quality scoring. Ranks every assistant
+  turn by output-tokens-per-dollar. The top of the list is high-yield
+  prompts (concise input → useful output); the bottom is low-yield (lots
+  of cache + input → little output). Use the bottom list for self-coaching.
+- **iCal export** — `ccmeter export --format ics` (alias `ical`) emits a
+  standards-compliant `.ics` file with one VEVENT per session. Drop into
+  Apple Calendar / Google Calendar / Outlook for billable-time tracking.
+- **Git-branch auto-tagging** — `ccmeter --auto-tag-git ...` (or env
+  `CCMETER_GIT_AUTOTAG=1`) reads `.git/HEAD` from each session's working
+  directory and applies a `branch:<name>` tag to non-main sessions. Manual
+  tags from `ccmeter tag` always win. Worktrees and detached-HEAD handled.
+- **`ccmeter notify`** — desktop budget notifications. One-shot or
+  `--watch` polling daemon. macOS `osascript`, Linux `notify-send`,
+  Windows toast (best-effort). Threshold and quiet-window are tunable.
+  Reads your saved monthly budget from `ccmeter budget`.
+- **AI Coach in `ccmeter live`** — rules-based real-time warnings inline
+  in the live ticker. Catches: idle-bust imminent (4+ minutes since last
+  turn with active cache), 3 consecutive >$0.30 turns (likely loop),
+  same tool fired 5+ times in last 10 turns (stuck), >$1 burned in the
+  last minute (rate alarm). Each rule is 4 lines; PRs to add more are
+  trivial.
+- **`ccmeter reconcile`** — diffs ccmeter's local total against
+  Anthropic's authoritative `/v1/organizations/usage_report`. Requires
+  `ANTHROPIC_API_KEY` in the environment with org-admin scope. Reports
+  delta and percentage; flags >15% drift with diagnostic suggestions.
+  Defensive about Anthropic's evolving API shape.
+- **`python/pyccmeter.py`** — Python companion module. Wraps the CLI's
+  JSON export and exposes the analysis as Python dataclasses. Useful
+  for piping into pandas / matplotlib / per-team rollups. Single-file,
+  no install — copy into your project, `from pyccmeter import load_analysis`.
+
+### Not built (multi-day projects)
+
+The README roadmap also lists items that need infrastructure outside this
+repo's scope: native macOS menu-bar app (Xcode + signing + notarization),
+VS Code / JetBrains extensions (separate marketplaces), per-team
+aggregation server (hosting + auth), anonymized community comparator
+(SaaS backend), Go port (separate ecosystem). These remain on the
+roadmap but live in companion repos when they ship, not in `ccmeter` core.
+
+## [0.2.1] — 2026-04-26
+
+Cosmetic-only release. No behavioral changes.
+
+### Fixed
+
+- The published `0.2.0` tarball shipped stale Vite hashed assets from previous
+  builds (multiple `index-XXXX.js` siblings). The published `index.html`
+  always pointed at the current one, so the package worked fine, but the
+  tarball was about 500 KB larger than necessary. v0.2.1 ships ~470 KB
+  instead of ~948 KB.
+- One leftover `↓ Apr 2 cache TTL change` annotation in `docs/hero.svg` that
+  the v0.2.0 reframing pass missed. Now reads `↓ Mar 2026 cache TTL rollout`
+  to match the rest of the repo.
+- `package.json` `repository.url` is now in canonical `git+https://...` form,
+  silencing the `npm pkg fix` warning at publish time.
+
+### Changed
+
+- Vite `emptyOutDir` defaults to `true` so future tarballs are slim by
+  default. The opt-out is `VITE_EMPTY_OUT=0` for filesystems that can't
+  unlink (sandboxed mounts, some CI runners).
+
 ## [0.2.0] — 2026-04-26
 
 ### Fixed (critical, blocked launch)

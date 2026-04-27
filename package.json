@@ -1,6 +1,6 @@
 {
   "name": "ccmeter",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Local-first spend & cache-efficiency dashboard for Claude Code. Reads ~/.claude/projects, tells you exactly what's costing you.",
   "keywords": [
     "claude",
@@ -17,7 +17,7 @@
   "homepage": "https://github.com/vnmoorthy/ccmeter",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vnmoorthy/ccmeter.git"
+    "url": "git+https://github.com/vnmoorthy/ccmeter.git"
   },
   "bugs": {
     "url": "https://github.com/vnmoorthy/ccmeter/issues"

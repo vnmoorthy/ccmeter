@@ -12,9 +12,11 @@ export default defineConfig({
   base: "/",
   build: {
     outDir: path.resolve(here, "../../dist/web"),
-    // Some filesystems (CI, sandboxed mounts) can't unlink files Vite tries
-    // to clean. Default to false; override with VITE_EMPTY_OUT=1 if needed.
-    emptyOutDir: process.env.VITE_EMPTY_OUT === "1",
+    // Default true so npm publish ships only the current bundle, not stale
+    // hashed artifacts from previous builds. Override with VITE_EMPTY_OUT=0
+    // if your filesystem can't unlink (rare; was needed for our sandbox
+    // build but never on a real Mac/Linux dev box).
+    emptyOutDir: process.env.VITE_EMPTY_OUT !== "0",
     target: "es2022",
     sourcemap: false,
     chunkSizeWarningLimit: 800,

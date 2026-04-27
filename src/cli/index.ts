@@ -5,7 +5,7 @@ import { Command } from "commander";
 import pc from "picocolors";
 import { setLevel } from "../core/logger.js";
 
-export const VERSION = "0.2.0";
+export const VERSION = "0.3.0";
 
 async function main(): Promise<void> {
   const program = new Command();
@@ -24,12 +24,17 @@ async function main(): Promise<void> {
       "--anonymize",
       "replace project paths and session ids with stable anonymized labels (safe for screenshots / launch demos)",
     )
+    .option(
+      "--auto-tag-git",
+      "auto-tag sessions with their git branch (skipped on main/master). Equivalent to CCMETER_GIT_AUTOTAG=1.",
+    )
     .hook("preAction", (cmd) => {
       const opts = cmd.opts<{
         logLevel?: string;
         logDir?: string;
         demo?: boolean;
         anonymize?: boolean;
+        autoTagGit?: boolean;
       }>();
       if (opts.logLevel) {
         const lvl = opts.logLevel.toLowerCase();
@@ -45,6 +50,9 @@ async function main(): Promise<void> {
       }
       if (opts.anonymize) {
         process.env.CCMETER_ANONYMIZE = "1";
+      }
+      if (opts.autoTagGit) {
+        process.env.CCMETER_GIT_AUTOTAG = "1";
       }
     });
 
@@ -266,6 +274,41 @@ async function main(): Promise<void> {
     .action(async (opts) => {
       const { runSelftest } = await import("./commands/selftest.js");
       await runSelftest(opts);
+    });
+
+  program
+    .command("prompts")
+    .description("rank assistant turns by output-tokens-per-dollar (which prompts are high-yield)")
+    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--top <n>", "rows in best-yield list (default 10)", "10")
+    .option("--bottom <n>", "rows in worst-yield list (default 10)", "10")
+    .option("--json", "machine-readable JSON output")
+    .action(async (opts) => {
+      const { runPrompts } = await import("./commands/prompts.js");
+      await runPrompts(opts);
+    });
+
+  program
+    .command("notify")
+    .description("desktop notification when projected monthly spend approaches your budget")
+    .option("--watch", "stay running and re-check on an interval")
+    .option("--interval <s>", "seconds between checks in --watch mode (default 300)", "300")
+    .option("--quiet <s>", "seconds of silence after a fired notification (default 3600)", "3600")
+    .option("--threshold <r>", "fraction of budget that triggers a notification (default 0.9)", "0.9")
+    .option("--budget <amount>", "override the saved monthly budget for this run")
+    .action(async (opts) => {
+      const { runNotify } = await import("./commands/notify.js");
+      await runNotify(opts);
+    });
+
+  program
+    .command("reconcile")
+    .description("diff ccmeter's local total vs Anthropic's authoritative usage (requires ANTHROPIC_API_KEY)")
+    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--json", "machine-readable JSON output")
+    .action(async (opts) => {
+      const { runReconcile } = await import("./commands/reconcile.js");
+      await runReconcile(opts);
     });
 
   program

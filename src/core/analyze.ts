@@ -16,6 +16,7 @@ import { loadOverrides } from "./pricing/models.js";
 import { ANALYSIS_SCHEMA_VERSION, type Analysis, type Session } from "./types.js";
 import { makeDemoAnalysis } from "./demo.js";
 import { displayAnonymizeId, displayAnonymizePath } from "./privacy.js";
+import { inferBranch } from "./git.js";
 
 export interface AnalyzeOptions extends LoadOptions {
   /** Filter sessions to those whose project path contains this substring. */
@@ -30,6 +31,11 @@ export interface AnalyzeOptions extends LoadOptions {
    * Costs and trends are unchanged. Set this when sharing a screenshot or
    * launch gif. Honored automatically when CCMETER_ANONYMIZE=1 in env. */
   anonymize?: boolean;
+  /** When true, sessions whose project path is a git working tree get an
+   * auto-tag like "branch:auth-refactor" (skipped on main/master).
+   * Auto-tag never overrides a manually-set tag. Honored automatically when
+   * CCMETER_GIT_AUTOTAG=1 in env. */
+  autoTagGit?: boolean;
 }
 
 /** Rewrite session.projectPath, session.id, session.filePath, and the
@@ -90,6 +96,19 @@ export async function analyze(opts: AnalyzeOptions = {}): Promise<Analysis> {
 
   // Apply persisted tags from ~/.config/ccmeter/tags.json (best-effort).
   await applyTags(sessions);
+
+  // Optional: infer a tag from the git branch the session ran in.
+  // Manual tags always win.
+  const autoTagGit = opts.autoTagGit || process.env.CCMETER_GIT_AUTOTAG === "1";
+  if (autoTagGit) {
+    for (const s of sessions) {
+      if (s.tag) continue;
+      const branch = inferBranch(s.projectPath);
+      if (!branch) continue;
+      if (branch === "main" || branch === "master") continue;
+      s.tag = `branch:${branch}`;
+    }
+  }
 
   // Anonymize BEFORE aggregation so every downstream consumer (CLI tables,
   // dashboard, recommendation evidence, JSON exports) inherits stable labels
