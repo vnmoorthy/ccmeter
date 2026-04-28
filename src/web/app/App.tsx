@@ -57,6 +57,17 @@ export function App(): JSX.Element {
     window.location.hash = `/${tab}`;
   }, [tab]);
 
+  // Keep tab state in sync with the URL hash so browser back/forward
+  // and deep-link bookmarks (e.g. /?t=...#/cache) update the active tab.
+  useEffect(() => {
+    const onHash = (): void => {
+      const h = window.location.hash.replace("#/", "");
+      if (TABS.some((t) => t.id === h)) setTab(h as Tab);
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
       <header
