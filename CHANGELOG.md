@@ -4,6 +4,39 @@ All notable changes to ccmeter will be documented here. Format: [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-04-28
+
+Patch release for two dashboard bugs caught by `/qa` shortly after 0.3.1
+shipped. No CLI changes.
+
+### Fixed
+
+- **Cache tab rendered as a blank page.** `src/web/app/pages/Cache.tsx`
+  referenced `showApril2` and `APRIL_2_2026`, which were defined nowhere.
+  ReferenceError fired silently on mount and the entire route unmounted to
+  empty. Replaced with the constants that the rest of the file already
+  uses (`showTtlCallout`, `TTL_ROLLOUT_START`). The chart's TTL-rollout
+  reference line now labels correctly (`"TTL rollout"` instead of the
+  stale `"Apr 2"`).
+
+  Why this slipped past CI: the project's root `tsconfig.json` excludes
+  `src/web/app/**` from typecheck, and Vite's esbuild transform doesn't
+  flag undefined identifiers. Tracked as a follow-up to modernize the
+  React 19 `JSX.Element` type usage and re-enable web typecheck.
+
+- **Browser back/forward and deep-link bookmarks left the URL desynced
+  from the active tab.** `src/web/app/App.tsx` read `window.location.hash`
+  once at mount and never installed a listener. Added a `hashchange`
+  effect that calls `setTab` when the hash changes externally, with a
+  paired `removeEventListener` cleanup.
+
+### Tests
+
+- Added `test/web-regression.test.ts` (4 source-scan tests) that lock in
+  both fixes — assert Cache.tsx no longer references the bad identifiers
+  and that App.tsx installs the hashchange listener with a setTab call.
+  Total now 59 tests, still under one second.
+
 ## [0.3.1] — 2026-04-28
 
 Bug-fix release driven by a `/devex-review` of the CLI surface and a `/cso`

@@ -5,7 +5,7 @@ import { Command, InvalidArgumentError } from "commander";
 import pc from "picocolors";
 import { setLevel } from "../core/logger.js";
 
-export const VERSION = "0.3.1";
+export const VERSION = "0.3.2";
 
 function parsePositiveInt(name: string) {
   return (raw: string): number => {

@@ -46,7 +46,7 @@ describe("selftest version", () => {
     const r = run(["selftest", "--max-files", "1"]);
     // selftest prints "ccmeter X.Y.Z · node ..." in its environment line.
     // Should match the version from package.json (read via src/cli/index.ts).
-    expect(r.stdout).toMatch(/ccmeter 0\.3\.1\b/);
+    expect(r.stdout).toMatch(/ccmeter 0\.3\.2\b/);
     expect(r.stdout).not.toMatch(/ccmeter 0\.2\.0\b/);
   });
 });

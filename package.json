@@ -1,6 +1,6 @@
 {
   "name": "ccmeter",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Local-first spend & cache-efficiency dashboard for Claude Code. Reads ~/.claude/projects, tells you exactly what's costing you.",
   "keywords": [
     "claude",
