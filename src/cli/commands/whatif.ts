@@ -7,13 +7,13 @@
 
 import pc from "picocolors";
 import { analyze } from "../../core/analyze.js";
-import { pricingFor } from "../../core/pricing/models.js";
+import { pricingFor, listModels } from "../../core/pricing/models.js";
 import { bold, divider, fmtUSD } from "../ui/format.js";
 
 interface WhatIfOpts {
-  days?: string;
+  days?: number | string;
   swap?: string[];
-  cacheTtl?: string;
+  cacheTtl?: number | string;
   disableCache?: boolean;
 }
 
@@ -25,13 +25,16 @@ const FAMILY_TARGETS: Record<string, string> = {
 
 export async function runWhatIf(opts: WhatIfOpts): Promise<void> {
   const days = parseInt(String(opts.days ?? 30), 10);
+
+  // parseSwaps throws on malformed input; main()'s top-level catch in
+  // src/cli/index.ts prints the message in red and exits 1.
+  const swaps = parseSwaps(opts.swap ?? []);
+
   const a = await analyze({ days });
   const w = process.stdout.columns ? Math.min(process.stdout.columns, 88) : 80;
 
   process.stdout.write(`\n${bold(`What-if simulation — last ${days} days`)}\n${divider(w)}\n`);
   process.stdout.write(`Actual spend: ${bold(fmtUSD(a.totals.totalCost))}\n\n`);
-
-  const swaps = parseSwaps(opts.swap ?? []);
   let simulatedTotal = 0;
   for (const s of a.sessions) {
     const targetModel = pickTarget(s.primaryModel, swaps) ?? s.primaryModel;
@@ -57,12 +60,13 @@ export async function runWhatIf(opts: WhatIfOpts): Promise<void> {
   if (opts.disableCache) {
     process.stdout.write(`  • cache disabled (every read becomes full input)\n`);
   }
-  if (opts.cacheTtl && opts.cacheTtl !== "300") {
+  const ttlSec = opts.cacheTtl != null ? Number(opts.cacheTtl) : 300;
+  if (ttlSec !== 300) {
     process.stdout.write(
-      `  • cache TTL: ${opts.cacheTtl}s (would re-bucket busts; needs phase-2 work)\n`,
+      `  • cache TTL: ${ttlSec}s (would re-bucket busts; needs phase-2 work)\n`,
     );
   }
-  if (swaps.length === 0 && !opts.disableCache && (!opts.cacheTtl || opts.cacheTtl === "300")) {
+  if (swaps.length === 0 && !opts.disableCache && ttlSec === 300) {
     process.stdout.write(pc.dim(`  • no scenario flags set — try --swap opus->sonnet\n`));
   }
   process.stdout.write("\n");
@@ -89,11 +93,44 @@ interface Swap {
   to: string;
 }
 
-function parseSwaps(raw: string[]): Swap[] {
+export function parseSwaps(raw: string[]): Swap[] {
+  const knownModels = new Set(listModels().map((m) => m.id));
+  const knownFamilies = new Set(Object.keys(FAMILY_TARGETS));
+  const isValid = (token: string): boolean => {
+    if (!token) return false;
+    if (knownFamilies.has(token)) return true;
+    if (knownModels.has(token)) return true;
+    // Accept partial / dated suffixes that prefix-match a known model id
+    // (mirrors pricingFor's lenient resolution). Require at least one hyphen
+    // in the token so single-letter prefixes like "c" don't sneak through.
+    if (!token.includes("-")) return false;
+    for (const id of knownModels) if (token.startsWith(id) || id.startsWith(token)) return true;
+    return false;
+  };
+
   const out: Swap[] = [];
   for (const r of raw) {
+    if (!r.includes("->")) {
+      throw new Error(
+        `--swap expects 'from->to' (got "${r}"). Example: --swap opus->sonnet.`,
+      );
+    }
     const [from, to] = r.split("->").map((s) => s.trim().toLowerCase());
-    if (!from || !to) continue;
+    if (!from || !to) {
+      throw new Error(
+        `--swap expects 'from->to' (got "${r}"). Example: --swap opus->sonnet.`,
+      );
+    }
+    if (!isValid(from)) {
+      throw new Error(
+        `--swap: unknown model '${from}'. Use one of: ${[...knownFamilies].join(", ")} (or run 'ccmeter pricing' for full ids).`,
+      );
+    }
+    if (!isValid(to)) {
+      throw new Error(
+        `--swap: unknown model '${to}'. Use one of: ${[...knownFamilies].join(", ")} (or run 'ccmeter pricing' for full ids).`,
+      );
+    }
     out.push({ from, to });
   }
   return out;

@@ -4,6 +4,51 @@ All notable changes to ccmeter will be documented here. Format: [Keep a Changelo
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-04-28
+
+Bug-fix release driven by a `/devex-review` of the CLI surface and a `/cso`
+security audit. No behavior changes for valid inputs; better errors for invalid
+ones; tighter CI/CD supply chain.
+
+### Fixed
+
+- **`ccmeter selftest` reports the wrong version.** `src/cli/commands/selftest.ts:327`
+  hardcoded `"0.2.0"` as a fallback, so `selftest` printed an old version even on
+  fresh installs. Now imports the canonical `VERSION` constant from
+  `src/cli/index.ts`.
+- **Unknown subcommands silently ran `summary`.** Typing `ccmeter dahsboard`
+  produced a default summary instead of an error. Now prints
+  `ccmeter: unknown command 'dahsboard'. Did you mean 'dashboard'?` and exits 1.
+  Levenshtein-based did-you-mean across all 27 commands.
+- **`--days abc` printed `last NaN days`.** No int validation on numeric flags.
+  Added a positive-integer parser (`parsePositiveInt`) on `--days`, `--top`,
+  `--bottom`, `--port`, `--interval`, `--quiet`, `--cache-ttl`, `--max-files`,
+  `--sample-turns`. Bad input now errors via commander before the command runs.
+- **`whatif --swap xyz->abc` returned a confident fake savings number.**
+  `parseSwaps` accepted any token because `pricingFor` falls back to default
+  pricing for unknown models. Now validates both sides of the swap against
+  family aliases (`opus`/`sonnet`/`haiku`) and the built-in pricing table, and
+  rejects single-letter prefixes that previously slipped through.
+- **`README.md` commands table missing rows.** Added `selftest`, `prompts`,
+  `notify`, `reconcile`, `pricing` so the table matches `--help`.
+
+### Security
+
+- **Pinned all GitHub Actions by commit SHA** in `ci.yml` and `release.yml`
+  (`actions/checkout`, `actions/setup-node`, `softprops/action-gh-release`).
+  Prevents a tag-repoint or namespace-takeover attack from injecting code into
+  the release pipeline that handles `NPM_TOKEN`.
+- **Added `.github/dependabot.yml`** for `github-actions` (weekly, grouped) and
+  `npm` (weekly, dev/prod groups). Keeps SHA pins and dependencies fresh
+  automatically.
+
+### Tests
+
+- New `test/cli-validation.test.ts` (20 tests) covers every fix above —
+  selftest version, unknown-command rejection, `--days`/`--top` validators,
+  `whatif --swap` validation including the single-letter loophole. Total now
+  55 tests, still under one second.
+
 ## [0.3.0] — 2026-04-26
 
 Seven new features that knock items off the README roadmap. All in-tree;

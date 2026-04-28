@@ -1,11 +1,38 @@
 // ccmeter CLI entrypoint.
 // Wires every subcommand. Default invocation runs `summary`.
 
-import { Command } from "commander";
+import { Command, InvalidArgumentError } from "commander";
 import pc from "picocolors";
 import { setLevel } from "../core/logger.js";
 
-export const VERSION = "0.3.0";
+export const VERSION = "0.3.1";
+
+function parsePositiveInt(name: string) {
+  return (raw: string): number => {
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n <= 0) {
+      throw new InvalidArgumentError(`${name} must be a positive integer (got "${raw}").`);
+    }
+    return n;
+  };
+}
+
+const parseDays = parsePositiveInt("--days");
+const parseTop = parsePositiveInt("--top");
+const parseBottom = parsePositiveInt("--bottom");
+const parsePort = parsePositiveInt("--port");
+const parseInterval = parsePositiveInt("--interval");
+const parseMaxFiles = parsePositiveInt("--max-files");
+const parseSampleTurns = parsePositiveInt("--sample-turns");
+const parseCacheTtl = parsePositiveInt("--cache-ttl");
+const parseQuiet = parsePositiveInt("--quiet");
+const parseMinSavings = (raw: string): number => {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) {
+    throw new InvalidArgumentError(`--min-savings must be a non-negative number (got "${raw}").`);
+  }
+  return n;
+};
 
 async function main(): Promise<void> {
   const program = new Command();
@@ -59,7 +86,7 @@ async function main(): Promise<void> {
   program
     .command("summary", { isDefault: true })
     .description("one-screen overview of your spend, cache health, and trends")
-    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
     .option("--project <p>", "filter to a single project path or substring")
     .option("--no-color", "disable color output")
     .action(async (opts) => {
@@ -70,10 +97,10 @@ async function main(): Promise<void> {
   program
     .command("sessions")
     .description("list sessions sortable by cost, duration, or busts")
-    .option("--top <n>", "rows to show (default 25)", "25")
+    .option("--top <n>", "rows to show (default 25)", parseTop, 25)
     .option("--sort <key>", "cost|duration|busts|date (default cost)", "cost")
     .option("--project <p>", "filter to a project")
-    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
     .option("--tag <name>", "filter to sessions with this tag")
     .option("--json", "machine-readable JSON output")
     .action(async (opts) => {
@@ -84,7 +111,7 @@ async function main(): Promise<void> {
   program
     .command("cache")
     .description("cache hit rate, bust count, and bust cost over time")
-    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
     .option("--project <p>", "filter to a project")
     .action(async (opts) => {
       const { runCache } = await import("./commands/cache.js");
@@ -94,8 +121,8 @@ async function main(): Promise<void> {
   program
     .command("recommend")
     .description("personalized cost-cutting suggestions based on your patterns")
-    .option("--days <n>", "lookback window (default 30)", "30")
-    .option("--min-savings <n>", "hide recs below this monthly $ savings", "0")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
+    .option("--min-savings <n>", "hide recs below this monthly $ savings", parseMinSavings, 0)
     .option("--json", "machine-readable JSON output")
     .action(async (opts) => {
       const { runRecommend } = await import("./commands/recommend.js");
@@ -105,7 +132,7 @@ async function main(): Promise<void> {
   program
     .command("dashboard")
     .description("start the local web dashboard at http://127.0.0.1:<port>")
-    .option("--port <n>", "port (default 7777)", "7777")
+    .option("--port <n>", "port (default 7777)", parsePort, 7777)
     .option("--no-open", "do not auto-open the browser")
     .action(async (opts) => {
       const { runDashboard } = await import("./commands/dashboard.js");
@@ -117,7 +144,7 @@ async function main(): Promise<void> {
     .description("export the full analysis as json|csv|md")
     .option("--format <f>", "json|csv|md (default json)", "json")
     .option("--out <path>", "output file (default stdout)")
-    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
     .option("--no-redact", "do not redact project paths")
     .option("--anonymize", "fully hash project paths and session ids for safe sharing")
     .action(async (opts) => {
@@ -128,7 +155,7 @@ async function main(): Promise<void> {
   program
     .command("watch")
     .description("live-tail today's spend as Claude Code writes new turns")
-    .option("--interval <ms>", "refresh interval in ms (default 2000)", "2000")
+    .option("--interval <ms>", "refresh interval in ms (default 2000)", parseInterval, 2000)
     .action(async (opts) => {
       const { runWatch } = await import("./commands/watch.js");
       await runWatch(opts);
@@ -137,9 +164,9 @@ async function main(): Promise<void> {
   program
     .command("whatif")
     .description("simulate spend under alternative pricing or model choices")
-    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
     .option("--swap <pair>", "model swap, e.g. 'opus->sonnet' (repeatable)", collect, [])
-    .option("--cache-ttl <seconds>", "simulate a different cache TTL", "300")
+    .option("--cache-ttl <seconds>", "simulate a different cache TTL", parseCacheTtl, 300)
     .option("--disable-cache", "simulate caching being completely off")
     .action(async (opts) => {
       const { runWhatIf } = await import("./commands/whatif.js");
@@ -160,7 +187,7 @@ async function main(): Promise<void> {
     .command("digest")
     .description("post a weekly digest to a Slack/Discord webhook")
     .option("--webhook <url>", "webhook URL (or set CCMETER_WEBHOOK_URL)")
-    .option("--days <n>", "window covered by digest (default 7)", "7")
+    .option("--days <n>", "window covered by digest (default 7)", parseDays, 7)
     .option("--dry-run", "print the payload, do not POST")
     .action(async (opts) => {
       const { runDigest } = await import("./commands/digest.js");
@@ -214,7 +241,7 @@ async function main(): Promise<void> {
   program
     .command("metrics")
     .description("emit Prometheus-format metrics on stdout (or via dashboard /api/metrics)")
-    .option("--days <n>", "lookback window (default 7)", "7")
+    .option("--days <n>", "lookback window (default 7)", parseDays, 7)
     .action(async (opts) => {
       const { runMetrics } = await import("./commands/metrics.js");
       await runMetrics(opts);
@@ -223,7 +250,7 @@ async function main(): Promise<void> {
   program
     .command("tools")
     .description("per-tool cost breakdown (Bash, Read, Edit, …) — answers “which tool ate the budget”")
-    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
     .option("--project <p>", "filter to a project")
     .option("--json", "machine-readable JSON output")
     .action(async (opts) => {
@@ -246,7 +273,7 @@ async function main(): Promise<void> {
   program
     .command("share")
     .description("emit a shareable Markdown stat-card or social-friendly SVG")
-    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
     .option("--format <f>", "md|svg (default md)", "md")
     .option("--out <path>", "output file (default stdout)")
     .option("--fuzzy", "round to friendly bands (e.g. ~$200) — best for public posts")
@@ -258,7 +285,7 @@ async function main(): Promise<void> {
   program
     .command("live")
     .description("full-screen live ticker showing each turn as it lands (great for demos)")
-    .option("--interval <ms>", "tick interval in ms (default 1500)", "1500")
+    .option("--interval <ms>", "tick interval in ms (default 1500)", parseInterval, 1500)
     .action(async (opts) => {
       const { runLive } = await import("./commands/live.js");
       await runLive(opts);
@@ -268,8 +295,8 @@ async function main(): Promise<void> {
     .command("selftest")
     .description("validate the parser/pricing against your real ~/.claude/projects data")
     .option("--no-redact", "show full file paths in the output")
-    .option("--sample-turns <n>", "how many sample turn-shapes to print", "5")
-    .option("--max-files <n>", "cap files scanned (helps on huge histories)", "200")
+    .option("--sample-turns <n>", "how many sample turn-shapes to print", parseSampleTurns, 5)
+    .option("--max-files <n>", "cap files scanned (helps on huge histories)", parseMaxFiles, 200)
     .option("--json", "machine-readable JSON output for issue reports")
     .action(async (opts) => {
       const { runSelftest } = await import("./commands/selftest.js");
@@ -279,9 +306,9 @@ async function main(): Promise<void> {
   program
     .command("prompts")
     .description("rank assistant turns by output-tokens-per-dollar (which prompts are high-yield)")
-    .option("--days <n>", "lookback window (default 30)", "30")
-    .option("--top <n>", "rows in best-yield list (default 10)", "10")
-    .option("--bottom <n>", "rows in worst-yield list (default 10)", "10")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
+    .option("--top <n>", "rows in best-yield list (default 10)", parseTop, 10)
+    .option("--bottom <n>", "rows in worst-yield list (default 10)", parseBottom, 10)
     .option("--json", "machine-readable JSON output")
     .action(async (opts) => {
       const { runPrompts } = await import("./commands/prompts.js");
@@ -292,8 +319,8 @@ async function main(): Promise<void> {
     .command("notify")
     .description("desktop notification when projected monthly spend approaches your budget")
     .option("--watch", "stay running and re-check on an interval")
-    .option("--interval <s>", "seconds between checks in --watch mode (default 300)", "300")
-    .option("--quiet <s>", "seconds of silence after a fired notification (default 3600)", "3600")
+    .option("--interval <s>", "seconds between checks in --watch mode (default 300)", parseInterval, 300)
+    .option("--quiet <s>", "seconds of silence after a fired notification (default 3600)", parseQuiet, 3600)
     .option("--threshold <r>", "fraction of budget that triggers a notification (default 0.9)", "0.9")
     .option("--budget <amount>", "override the saved monthly budget for this run")
     .action(async (opts) => {
@@ -304,7 +331,7 @@ async function main(): Promise<void> {
   program
     .command("reconcile")
     .description("diff ccmeter's local total vs Anthropic's authoritative usage (requires ANTHROPIC_API_KEY)")
-    .option("--days <n>", "lookback window (default 30)", "30")
+    .option("--days <n>", "lookback window (default 30)", parseDays, 30)
     .option("--json", "machine-readable JSON output")
     .action(async (opts) => {
       const { runReconcile } = await import("./commands/reconcile.js");
@@ -330,6 +357,8 @@ async function main(): Promise<void> {
       await runCompare(opts);
     });
 
+  rejectUnknownCommand(program);
+
   try {
     await program.parseAsync(process.argv);
   } catch (err) {
@@ -341,6 +370,73 @@ async function main(): Promise<void> {
 
 function collect(value: string, prev: string[]): string[] {
   return prev.concat([value]);
+}
+
+// Stop typos like `ccmeter dahsboard` from silently running the default
+// summary command. Walk argv past global flags; if the first non-flag token
+// isn't a registered command, error with a did-you-mean hint.
+function rejectUnknownCommand(program: Command): void {
+  const known = new Set<string>();
+  for (const c of program.commands) {
+    known.add(c.name());
+    for (const a of c.aliases()) known.add(a);
+  }
+
+  // Global options that consume a separate value token.
+  const valueTakingFlags = new Set(["--log-level", "--log-dir"]);
+
+  for (let i = 2; i < process.argv.length; i++) {
+    const arg = process.argv[i];
+    if (arg === undefined) return;
+    if (arg === "--") return;
+    if (valueTakingFlags.has(arg)) {
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("-")) continue;
+    if (known.has(arg)) return;
+    const suggestion = nearestCommand(arg, [...known]);
+    process.stderr.write(pc.red(`ccmeter: unknown command '${arg}'.`));
+    if (suggestion) process.stderr.write(pc.dim(` Did you mean '${suggestion}'?`));
+    process.stderr.write(`\nRun ${pc.bold("ccmeter --help")} to see all commands.\n`);
+    process.exit(1);
+  }
+}
+
+function nearestCommand(input: string, known: string[]): string | undefined {
+  let best: string | undefined;
+  let bestDist = Infinity;
+  for (const k of known) {
+    const d = editDistance(input, k);
+    if (d < bestDist) {
+      bestDist = d;
+      best = k;
+    }
+  }
+  // Only suggest when the typo is plausibly close.
+  return bestDist <= Math.max(2, Math.floor(input.length / 3)) ? best : undefined;
+}
+
+function editDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () =>
+    new Array<number>(b.length + 1).fill(0),
+  );
+  for (let i = 0; i <= a.length; i++) dp[i]![0] = i;
+  for (let j = 0; j <= b.length; j++) dp[0]![j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i]![j] = Math.min(
+        dp[i - 1]![j]! + 1,
+        dp[i]![j - 1]! + 1,
+        dp[i - 1]![j - 1]! + cost,
+      );
+    }
+  }
+  return dp[a.length]![b.length]!;
 }
 
 main();

@@ -28,3 +28,7 @@ docs/_frame_*.jpg
 
 # Claude Code working files (in case they ever land here)
 .claude/
+
+python/__pycache__/
+*.pyc
+.gstack/

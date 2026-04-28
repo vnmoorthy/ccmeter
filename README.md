@@ -75,6 +75,7 @@ Don't have Claude Code installed yet but want to see what ccmeter looks like? Tr
 | `ccmeter tools` | per-tool cost breakdown — answers "which subagent ate the budget" |
 | `ccmeter compare` | week-over-week (or any two-period) deltas across all metrics |
 | `ccmeter whatif` | simulate model swaps & cache TTL scenarios on YOUR data |
+| `ccmeter prompts` | rank assistant turns by output-tokens-per-dollar |
 | `ccmeter share` | shareable Markdown stat-card or social SVG (paths redacted) |
 | `ccmeter live` | full-screen ticker — each turn lands as it happens |
 | `ccmeter dashboard` | local web UI on `127.0.0.1:7777` (no network egress) |
@@ -83,10 +84,14 @@ Don't have Claude Code installed yet but want to see what ccmeter looks like? Tr
 | `ccmeter watch` | one-line live tail today's spend (perfect for tmux/PS1) |
 | `ccmeter prompt --budget 10` | one-line, color-coded $ for your shell prompt |
 | `ccmeter metrics` | Prometheus exposition — scrape into Grafana |
+| `ccmeter notify` | desktop notification when projected spend nears your budget |
 | `ccmeter tag <id> <label>` | annotate a session for grouped reporting |
 | `ccmeter budget --set 200` | set & track a monthly budget |
 | `ccmeter digest --webhook URL` | post a weekly digest to Slack/Discord |
 | `ccmeter merge a.json b.json` | combine analyses from multiple machines |
+| `ccmeter pricing` | print the active pricing table (built-in + your overrides) |
+| `ccmeter reconcile` | diff ccmeter's local total vs Anthropic's authoritative usage |
+| `ccmeter selftest` | validate the parser/pricing against your real data |
 | `ccmeter doctor` | diagnose your setup |
 | `ccmeter check-privacy` | exhaustive list of every file ccmeter would read |
 | `ccmeter clear-cache` | drop the parsed cache at `~/.cache/ccmeter` |

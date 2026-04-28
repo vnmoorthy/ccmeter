@@ -28,6 +28,7 @@ import { costForTurn } from "../../core/pricing/compute.js";
 import { turnHasUsage, turnTimestampMs, turnModel } from "../../core/jsonl/schema.js";
 import { redactPath } from "../../core/privacy.js";
 import { getPricingVerifiedDate } from "../../core/pricing/models.js";
+import { VERSION } from "../index.js";
 import pc from "picocolors";
 
 const { bold, dim, green, red, yellow, cyan } = pc;
@@ -322,9 +323,7 @@ export async function runSelftest(opts: SelftestOpts): Promise<void> {
 }
 
 function pkgVersion(): string {
-  // Avoid a hard import of package.json (which causes ESM resolution
-  // headaches under different bundlers); fall back to a constant.
-  return process.env.CCMETER_VERSION ?? "0.2.0";
+  return process.env.CCMETER_VERSION ?? VERSION;
 }
 
 function redactBasename(p: string): string {
