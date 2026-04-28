@@ -122,12 +122,17 @@ export function CachePage({ days, pulse }: { days: number; pulse: number }): JSX
                 }}
                 formatter={(v: number) => `${v.toFixed(1)}%`}
               />
-              {showApril2 && (
+              {showTtlCallout && (
                 <ReferenceLine
-                  x={APRIL_2_2026}
+                  x={TTL_ROLLOUT_START}
                   stroke="var(--warn)"
                   strokeDasharray="3 3"
-                  label={{ value: "Apr 2", fill: "var(--warn)", fontSize: 10, position: "top" }}
+                  label={{
+                    value: "TTL rollout",
+                    fill: "var(--warn)",
+                    fontSize: 10,
+                    position: "top",
+                  }}
                 />
               )}
               <Line
